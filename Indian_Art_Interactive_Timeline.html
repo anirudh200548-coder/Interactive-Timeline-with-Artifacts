@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indian Art Through Time — Interactive Timeline</title>
+<style>
+:root{
+  --bg:#f6f0e5; --paper:#fffaf1; --ink:#2d241d; --muted:#766a5e;
+  --accent:#a4472d; --gold:#c4933f; --line:#d8c8b2; --shadow:0 12px 35px rgba(58,42,26,.12);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:Georgia,"Times New Roman",serif;color:var(--ink);background:
+ radial-gradient(circle at 10% 20%,rgba(196,147,63,.09),transparent 25%),
+ radial-gradient(circle at 90% 70%,rgba(164,71,45,.08),transparent 25%),var(--bg)}
+header{padding:54px 7% 40px;text-align:center;background:linear-gradient(135deg,#3d281d,#713820);color:#fffaf1}
+header .eyebrow{letter-spacing:3px;text-transform:uppercase;font:600 12px Arial,sans-serif;color:#e7c889}
+h1{font-size:clamp(36px,6vw,72px);margin:10px 0 12px;line-height:1}
+header p{max-width:760px;margin:auto;color:#f1dfc5;font:16px/1.7 Arial,sans-serif}
+.controls{position:sticky;top:0;z-index:10;background:rgba(255,250,241,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:14px 7%;display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+button,.search{font:600 13px Arial,sans-serif;border:1px solid #cdbda7;background:#fffaf1;color:var(--ink);padding:10px 15px;border-radius:22px;cursor:pointer}
+button:hover,.search:focus{border-color:var(--accent);transform:translateY(-1px)}
+button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.search{width:min(300px,80vw);outline:none}
+main{width:min(1180px,90%);margin:45px auto 80px}
+.timeline{position:relative}
+.timeline:before{content:"";position:absolute;left:50%;top:0;bottom:0;width:3px;background:var(--line);transform:translateX(-50%)}
+.era{position:relative;width:50%;padding:0 45px 55px}
+.era:nth-child(odd){left:0;text-align:right}.era:nth-child(even){left:50%;text-align:left}
+.dot{position:absolute;top:24px;width:20px;height:20px;border-radius:50%;background:var(--accent);border:5px solid var(--bg);box-shadow:0 0 0 2px var(--accent);z-index:2}
+.era:nth-child(odd) .dot{right:-10px}.era:nth-child(even) .dot{left:-10px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:18px;padding:24px;box-shadow:var(--shadow);transition:.25s}
+.card:hover{transform:translateY(-4px);box-shadow:0 18px 45px rgba(58,42,26,.18)}
+.date{font:700 12px Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent)}
+.card h2{margin:8px 0 7px;font-size:28px}.region{color:var(--muted);font-style:italic;margin-bottom:16px}
+.artifact{display:grid;grid-template-columns:150px 1fr;gap:18px;align-items:center}
+.replica{height:145px;border-radius:14px;background:#eadbc4;display:grid;place-items:center;overflow:hidden;border:1px solid #d4c0a4}
+.replica svg{width:90%;height:90%}
+.card p{font:14px/1.65 Arial,sans-serif;color:#4f453b}
+.card .tag{display:inline-block;margin-top:8px;padding:5px 9px;border-radius:12px;background:#efe3cf;color:#694a2d;font:11px Arial,sans-serif}
+.view{margin-top:15px;background:var(--accent);color:#fff;border:0}
+.empty{text-align:center;padding:50px;font:16px Arial;color:var(--muted);display:none}
+footer{text-align:center;padding:25px;background:#3d281d;color:#e9d6b9;font:12px Arial,sans-serif}
+.modal{position:fixed;inset:0;background:rgba(31,22,16,.72);display:none;align-items:center;justify-content:center;padding:20px;z-index:30}
+.modal.open{display:flex}
+.modalbox{width:min(720px,96vw);max-height:90vh;overflow:auto;background:var(--paper);border-radius:20px;padding:30px;position:relative;box-shadow:0 25px 80px #0008}
+.close{position:absolute;right:18px;top:16px;border:0;background:#eee0cc;font-size:20px;width:38px;height:38px;padding:0}
+.modal h2{font-size:34px;margin:0 45px 5px 0}.modal .meta{color:var(--accent);font:700 12px Arial;letter-spacing:1px;text-transform:uppercase}
+.modal p,.modal li{font:15px/1.7 Arial,sans-serif;color:#4d4339}.modal ul{padding-left:20px}
+.note{margin-top:18px;padding:14px 16px;border-left:4px solid var(--gold);background:#f2e7d5;font:13px/1.6 Arial,sans-serif}
+@media(max-width:700px){
+ .timeline:before{left:12px}.era,.era:nth-child(even),.era:nth-child(odd){left:0;width:100%;padding:0 0 35px 38px;text-align:left}
+ .era .dot,.era:nth-child(odd) .dot,.era:nth-child(even) .dot{left:3px;right:auto}
+ .artifact{grid-template-columns:1fr}.replica{height:170px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Interactive Digital Exhibition</div>
+  <h1>Indian Art Through Time</h1>
+  <p>Explore major periods of Indian art through clickable virtual replicas. Select an artifact to uncover its form, function, historical setting, and cultural significance.</p>
+</header>
+
+<div class="controls" id="controls">
+  <button class="active" data-filter="all">All Periods</button>
+  <button data-filter="ancient">Ancient</button>
+  <button data-filter="classical">Classical</button>
+  <button data-filter="medieval">Medieval</button>
+  <button data-filter="modern">Modern</button>
+  <input class="search" id="search" placeholder="Search artifact, period, region…">
+</div>
+
+<main>
+<section class="timeline" id="timeline"></section>
+<div class="empty" id="empty">No artifacts match your search.</div>
+</main>
+
+<footer>Educational project • Virtual replicas are simplified interpretive illustrations, not museum scans.</footer>
+
+<div class="modal" id="modal">
+  <div class="modalbox">
+    <button class="close" id="close">×</button>
+    <div class="meta" id="mmeta"></div>
+    <h2 id="mtitle"></h2>
+    <div id="mbody"></div>
+  </div>
+</div>
+
+<script>
+const artifacts=[
+{year:"c. 2600–1900 BCE",period:"ancient",title:"Dancing Girl",region:"Indus Valley • Mohenjo-daro",
+type:"Bronze figurine",tag:"Lost-wax casting",shape:"girl",
+intro:"A small bronze figure associated with the mature Indus Valley Civilization.",
+body:`<p>The famous figurine from Mohenjo-daro is about 10.5 cm tall and was made using a sophisticated lost-wax casting technique. Its confident stance, ornaments and simplified body have made it one of the best-known objects of Indus art.</p><ul><li><b>Material:</b> Bronze</li><li><b>Technique:</b> Lost-wax casting</li><li><b>Context:</b> Urban Indus civilization, known for planned cities, craft production and long-distance trade.</li></ul><div class="note"><b>Why it matters:</b> It demonstrates the technical skill of early South Asian metalworkers and offers a rare glimpse into human representation in Indus material culture.</div>`},
+{year:"c. 3rd century BCE",period:"ancient",title:"Lion Capital of Ashoka",region:"Mauryan Empire • Sarnath",
+type:"Stone capital",tag:"Polished sandstone",shape:"lion",
+intro:"A monumental symbol from the Mauryan period, associated with Emperor Ashoka.",
+body:`<p>The Sarnath Lion Capital was carved in polished sandstone during the reign of Ashoka. Four lions stand back-to-back above a circular abacus decorated with animals and wheels.</p><ul><li><b>Material:</b> Chunar sandstone</li><li><b>Style:</b> Mauryan stone carving and high polish</li><li><b>Historical role:</b> Connected with Ashoka's Buddhist patronage and the spread of his ethical message.</li></ul><div class="note"><b>Legacy:</b> The lion capital forms the basis of India's State Emblem, while the Dharma Chakra appears at the centre of the national flag.</div>`},
+{year:"c. 2nd century BCE–3rd century CE",period:"classical",title:"Gandhara Buddha",region:"Gandhara • Northwest South Asia",
+type:"Buddhist sculpture",tag:"Schist carving",shape:"buddha",
+intro:"A representative image of the Buddha from the Gandharan artistic tradition.",
+body:`<p>Gandharan Buddhist sculpture is known for naturalistic modelling, deeply carved drapery and visual features shaped by interaction among South Asian, Central Asian and Hellenistic traditions.</p><ul><li><b>Material:</b> Commonly grey schist</li><li><b>Subject:</b> The Buddha, often shown in meditation or teaching</li><li><b>Context:</b> Buddhist monastic centres along major cultural and trade routes.</li></ul><div class="note"><b>Visual clue:</b> Heavy, rhythmic folds in the robe are one of the easiest features to recognize in Gandharan sculpture.</div>`},
+{year:"c. 5th–6th century CE",period:"classical",title:"Ajanta Cave Painting",region:"Maharashtra • Ajanta",
+type:"Mural painting",tag:"Mineral pigments on plaster",shape:"ajanta",
+intro:"A virtual detail inspired by the narrative murals of the Ajanta caves.",
+body:`<p>Ajanta's Buddhist caves contain some of the most important surviving paintings of ancient India. Artists depicted stories, courtly life, landscapes, ornaments and religious themes with expressive figures and controlled linework.</p><ul><li><b>Site:</b> Rock-cut Buddhist cave complex</li><li><b>Technique:</b> Painting on prepared plaster surfaces using mineral and other pigments</li><li><b>Subject:</b> Jataka stories and Buddhist imagery</li></ul><div class="note"><b>Historical context:</b> The surviving paintings reveal connections among religion, patronage, architecture and elite visual culture in early historic India.</div>`},
+{year:"c. 11th century CE",period:"medieval",title:"Chola Nataraja",region:"Tamil Nadu • Chola period",
+type:"Bronze icon",tag:"Lost-wax casting",shape:"nataraja",
+intro:"The dancing form of Shiva became one of the defining achievements of Chola bronze sculpture.",
+body:`<p>The Nataraja represents Shiva as the cosmic dancer. The surrounding ring of flames, raised leg, flowing hair and balanced gestures create a dynamic image of creation, preservation and transformation.</p><ul><li><b>Material:</b> Bronze</li><li><b>Technique:</b> Lost-wax casting</li><li><b>Context:</b> Chola temple culture, where processional bronzes could be carried outside the temple during rituals.</li></ul><div class="note"><b>Key symbols:</b> The dwarf beneath Shiva represents ignorance; the drum evokes creation and the flame destruction/transformation.</div>`},
+{year:"c. 17th century CE",period:"medieval",title:"Mughal Miniature",region:"Mughal court • North India",
+type:"Manuscript painting",tag:"Opaque watercolor & gold",shape:"miniature",
+intro:"A stylized virtual replica representing the refined miniature-painting tradition of the Mughal court.",
+body:`<p>Mughal miniature painting developed through court patronage and combined Persianate manuscript traditions with Indian observation of people, animals and nature. Artists worked at a very small scale with precise brushes.</p><ul><li><b>Medium:</b> Opaque watercolor, ink and sometimes gold on prepared paper</li><li><b>Subjects:</b> Court scenes, portraits, battles, plants and animals</li><li><b>Context:</b> Imperial workshops where painters, calligraphers and other specialists collaborated.</li></ul><div class="note"><b>Visual clue:</b> Look for fine outlines, dense detail, patterned textiles and carefully constructed spaces.</div>`},
+{year:"c. 18th–19th century CE",period:"medieval",title:"Madhubani Painting",region:"Bihar • Mithila",
+type:"Folk painting",tag:"Line, pattern & natural pigments",shape:"madhubani",
+intro:"A representative virtual design inspired by the Mithila/Madhubani painting tradition.",
+body:`<p>Madhubani painting is associated with the Mithila region and has roots in domestic and ritual art. Characteristic features include strong outlines, filled spaces, repeated patterns and symbolic plants, animals and deities.</p><ul><li><b>Traditional surfaces:</b> Walls and floors; later paper and other media</li><li><b>Features:</b> Dense patterning, symbolic imagery and strong linear design</li><li><b>Context:</b> Household ritual traditions that later entered wider art markets.</li></ul>`},
+{year:"1940s–1950s",period:"modern",title:"Progressive Art Movement",region:"Post-independence India",
+type:"Modern painting",tag:"Modernism",shape:"modern",
+intro:"A virtual abstract composition representing the experimental spirit of Indian modernism.",
+body:`<p>After independence, Indian artists increasingly questioned inherited academic conventions and explored modernist approaches. The Progressive Artists' Group, founded in Bombay in 1947, became an important part of this story.</p><ul><li><b>Approach:</b> Modernist experimentation rather than a single uniform style</li><li><b>Themes:</b> Identity, urban life, tradition and modernity</li><li><b>Context:</b> A rapidly changing nation negotiating its cultural and artistic direction.</li></ul><div class="note"><b>Important:</b> Indian modernism was diverse; it cannot be reduced to one visual style or one group.</div>`}
+];
+
+function svg(shape){
+const common=`viewBox="0 0 200 160" xmlns="http://www.w3.org/2000/svg"`;
+if(shape==="girl") return `<svg ${common}><ellipse cx="100" cy="137" rx="43" ry="9" fill="#b98954"/><circle cx="100" cy="35" r="15" fill="#9d6b3d"/><path d="M88 51 Q100 45 112 51 L118 103 Q110 118 100 123 Q90 118 82 103Z" fill="#9d6b3d"/><path d="M86 58 Q65 70 71 91 M114 58 Q137 70 130 94" fill="none" stroke="#9d6b3d" stroke-width="9" stroke-linecap="round"/><path d="M94 122L87 143M106 122L114 143" stroke="#9d6b3d" stroke-width="8" stroke-linecap="round"/></svg>`;
+if(shape==="lion") return `<svg ${common}><circle cx="100" cy="82" r="48" fill="#c9a06b"/><circle cx="100" cy="82" r="34" fill="#ead5ae"/><circle cx="88" cy="72" r="5"/><circle cx="112" cy="72" r="5"/><path d="M89 94 Q100 103 111 94" fill="none" stroke-width="4"/><path d="M55 120 Q100 137 145 120 L151 140 L49 140Z" fill="#a47a48"/></svg>`;
+if(shape==="buddha") return `<svg ${common}><circle cx="100" cy="38" r="20" fill="#8d6b53"/><path d="M77 57 Q100 47 123 57 L140 118 Q100 137 60 118Z" fill="#8d6b53"/><path d="M67 78 Q100 92 133 78M68 97 Q100 110 132 97" fill="none" stroke="#d5bca0" stroke-width="4"/><circle cx="100" cy="14" r="7" fill="#8d6b53"/></svg>`;
+if(shape==="ajanta") return `<svg ${common}><path d="M18 125 Q55 35 101 48 Q151 23 182 125Z" fill="#b56c3f"/><path d="M45 113 Q72 66 98 80 Q126 50 154 111" fill="none" stroke="#f0c37c" stroke-width="7"/><circle cx="78" cy="73" r="12" fill="#e0a25e"/><circle cx="127" cy="64" r="12" fill="#8d4b36"/><path d="M52 125 Q100 98 160 125" fill="none" stroke="#ead49e" stroke-width="5"/></svg>`;
+if(shape==="nataraja") return `<svg ${common}><circle cx="100" cy="80" r="62" fill="none" stroke="#c08343" stroke-width="9" stroke-dasharray="8 5"/><circle cx="100" cy="48" r="14" fill="#9b6635"/><path d="M86 61 Q100 52 114 61 L121 103 Q106 116 83 104Z" fill="#9b6635"/><path d="M88 67L54 43M112 67L145 43M88 101L54 124M112 101L151 113" stroke="#9b6635" stroke-width="8" stroke-linecap="round"/><path d="M82 109 Q100 119 118 109" stroke="#9b6635" stroke-width="9"/><ellipse cx="100" cy="132" rx="28" ry="6" fill="#8a5831"/></svg>`;
+if(shape==="miniature") return `<svg ${common}><rect x="27" y="13" width="146" height="134" rx="4" fill="#d5a65e"/><rect x="38" y="24" width="124" height="112" fill="#efe0b7"/><circle cx="91" cy="65" r="15" fill="#9c674a"/><path d="M76 80 Q91 70 107 80 L119 116 L66 116Z" fill="#7d4e3a"/><circle cx="134" cy="84" r="10" fill="#6c7d4c"/><path d="M50 124 Q91 105 151 124" stroke="#a4472d" stroke-width="4" fill="none"/></svg>`;
+if(shape==="madhubani") return `<svg ${common}><rect x="18" y="14" width="164" height="132" fill="#f0d29d"/><circle cx="100" cy="80" r="35" fill="#b44735"/><path d="M100 30 L111 57 L140 52 L121 76 L143 96 L113 96 L100 130 L87 96 L57 96 L79 76 L60 52 L89 57Z" fill="none" stroke="#5d3b29" stroke-width="4"/><circle cx="100" cy="80" r="9" fill="#f0d29d"/></svg>`;
+return `<svg ${common}><rect x="17" y="15" width="166" height="130" fill="#e8dcc9"/><path d="M20 120 L65 55 L98 115 L137 35 L180 120" fill="none" stroke="#9b4732" stroke-width="12"/><circle cx="67" cy="50" r="18" fill="#c08b4e"/><circle cx="140" cy="35" r="13" fill="#6c7654"/><path d="M25 28 Q75 95 175 30" fill="none" stroke="#5a5147" stroke-width="5"/></svg>`;
+}
+
+function render(){
+ const filter=document.querySelector(".active").dataset.filter;
+ const q=document.getElementById("search").value.toLowerCase().trim();
+ const list=artifacts.filter(a=>(filter==="all"||a.period===filter)&&(!q||JSON.stringify(a).toLowerCase().includes(q)));
+ const timeline=document.getElementById("timeline");
+ timeline.innerHTML=list.map((a,i)=>`<article class="era"><span class="dot"></span><div class="card">
+ <div class="date">${a.year}</div><h2>${a.title}</h2><div class="region">${a.region}</div>
+ <div class="artifact"><div class="replica">${svg(a.shape)}</div><div><p>${a.intro}</p><span class="tag">${a.type} • ${a.tag}</span></div></div>
+ <button class="view" onclick="openModal(${artifacts.indexOf(a)})">Explore artifact →</button>
+ </div></article>`).join("");
+ document.getElementById("empty").style.display=list.length?"none":"block";
+}
+function openModal(i){
+ const a=artifacts[i];
+ document.getElementById("mmeta").textContent=`${a.year} • ${a.region}`;
+ document.getElementById("mtitle").textContent=a.title;
+ document.getElementById("mbody").innerHTML=`<div class="replica" style="height:210px;margin:18px 0">${svg(a.shape)}</div>${a.body}`;
+ document.getElementById("modal").classList.add("open");
+}
+document.querySelectorAll("[data-filter]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-filter]").forEach(x=>x.classList.remove("active"));b.classList.add("active");render()});
+document.getElementById("search").oninput=render;
+document.getElementById("close").onclick=()=>document.getElementById("modal").classList.remove("open");
+document.getElementById("modal").onclick=e=>{if(e.target.id==="modal")e.currentTarget.classList.remove("open")};
+document.addEventListener("keydown",e=>{if(e.key==="Escape")document.getElementById("modal").classList.remove("open")});
+render();
+</script>
+</body>
+</html>
